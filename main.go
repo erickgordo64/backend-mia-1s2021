@@ -35,8 +35,6 @@ func (db *cn)cerrar(){
 	defer db.db.Close()
 }
 
-
-
 // Persistence
 var tasks = allTasks{
 	{

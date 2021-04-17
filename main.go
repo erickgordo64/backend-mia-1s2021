@@ -53,15 +53,6 @@ func getTasks(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar
 	json.NewEncoder(w).Encode(tasks)
 }
 
-func conexion() {
-	db, err := sql.Open("godror", "HR/1234@localhost:1521/xe")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer db.Close()
-}
-
 func datos(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pol := newCn()

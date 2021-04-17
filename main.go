@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 
+	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
 )
 
@@ -15,6 +17,25 @@ type task struct {
 	Name    string `json:"Name"`
 	Content string `json:"Content"`
 }
+
+type cn struct{
+	db *sql.DB
+}
+
+func newCn() *cn {
+	return &cn{db: nil}
+}
+
+func (db *cn) abrir(){
+	db.db, _ =sql.Open("godror", "HR/1234@localhost:1521/xe")
+
+}
+
+func (db *cn)cerrar(){
+	defer db.db.Close()
+}
+
+
 
 // Persistence
 var tasks = allTasks{
@@ -30,6 +51,37 @@ type allTasks []task
 func getTasks(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tasks)
+}
+
+func conexion() {
+	db, err := sql.Open("godror", "HR/1234@localhost:1521/xe")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+}
+
+func datos(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select nombre from usuario")
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+
+	var thedate string
+	for rows.Next() {
+
+		rows.Scan(&thedate)
+		fmt.Printf("The date is: %s\n", thedate,thedate)
+		json.NewEncoder(w).Encode(thedate)
+	}
+	pol.cerrar()
 }
 
 func createTask(w http.ResponseWriter, r *http.Request) { // esto sirve para crear tareas
@@ -60,6 +112,7 @@ func main() {
 
 	router.HandleFunc("/", indexRoute)
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
+	router.HandleFunc("/data", datos).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":3000", router))

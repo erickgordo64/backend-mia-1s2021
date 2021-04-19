@@ -47,16 +47,16 @@ var tasks = allTasks{
 type allTasks []task
 
 type dato struct {
-	ID              int     `json: "ID"`
-	Estado          string  `json: "Estado"`
-	Nombre          string  `json: "Nombre"`
-	Apellido        string  `json: "Apellido"`
-	Correo          string  `json: "Correo"`
-	Contrasena      string  `json: "Contrasena"`
-	Fechanacimiento string  `json: "Fechanacimiento"`
-	Pais            string  `json: "Pais"`
-	Foto            string  `json: "Foto"`
-	Creditos        float32 `json: "Creditos"`
+	ID              int     `json:"ID"`
+	Estado          string  `json:"Estado"`
+	Nombre          string  `json:"Nombre"`
+	Apellido        string  `json:"Apellido"`
+	Correo          string  `json:"Correo"`
+	Contrasena      string  `json:"Contrasena"`
+	Fechanacimiento string  `json:"Fechanacimiento"`
+	Pais            string  `json:"Pais"`
+	Foto            string  `json:"Foto"`
+	Creditos        float32 `json:"Creditos"`
 }
 
 //Persistence
@@ -65,8 +65,8 @@ var datos = alldatos{}
 type alldatos []dato
 
 type categoria struct {
-	ID        int    `json: "ID"`
-	CATEGORIA string `json: "CATEGORIA"`
+	ID        int    `json:"ID"`
+	CATEGORIA string `json:"CATEGORIA"`
 }
 
 var categorias = allcategorias{}

@@ -47,35 +47,56 @@ var tasks = allTasks{
 type allTasks []task
 
 type dato struct {
-	idUsuario        int     `json:"idusuario"`
-	estado           string  `json:"estado"`
-	nombre           string  `json:"Content"`
-	apellido         string  `json:"apellido"`
-	correo           string  `json:"correo"`
-	contrasena       string  `json:"contrasena"`
-	fecha_nacimiento string  `json:"fecha_nacimiento"`
-	pais             string  `json:"pais"`
-	foto             string  `json:"foto"`
-	creditos         float32 `json:"creditos"`
+	ID              int     `json: "ID"`
+	Estado          string  `json: "Estado"`
+	Nombre          string  `json: "Nombre"`
+	Apellido        string  `json: "Apellido"`
+	Correo          string  `json: "Correo"`
+	Contrasena      string  `json: "Contrasena"`
+	Fechanacimiento string  `json: "Fechanacimiento"`
+	Pais            string  `json: "Pais"`
+	Foto            string  `json: "Foto"`
+	Creditos        float32 `json: "Creditos"`
 }
 
 //Persistence
-var datos = alldatos{
-	{
-		idUsuario:        0,
-		estado:           "esto",
-		nombre:           "es",
-		apellido:         "una",
-		correo:           "prueba",
-		contrasena:       "de",
-		fecha_nacimiento: "si",
-		pais:             "funciona",
-		foto:             "esto",
-		creditos:         1.1,
-	},
-}
+var datos = alldatos{}
 
 type alldatos []dato
+
+type categoria struct {
+	ID        int    `json: "ID"`
+	CATEGORIA string `json: "CATEGORIA"`
+}
+
+var categorias = allcategorias{}
+
+type allcategorias []categoria
+
+func getCategorias(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
+	w.Header().Set("Content-Type", "application/json")
+	var Cat categoria
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select * from categoria")
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&Cat.ID, &Cat.CATEGORIA)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		categorias = append(categorias, Cat)
+	}
+
+	json.NewEncoder(w).Encode(categorias)
+	pol.cerrar()
+}
 
 func getTasks(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
 	w.Header().Set("Content-Type", "application/json")
@@ -97,30 +118,15 @@ func getdatos(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-
-		var ID int
-		var ESTADO string
-		var NOMBRE string
-		var APELLIDO string
-		var CORREO string
-		var CONTRASENA string
-		var FECHA string
-		var PAIS string
-		var FOTO string
-		var CREDITOS string
-
-		err := rows.Scan(&ID, &ESTADO, &NOMBRE, &APELLIDO, &CORREO, &CONTRASENA, &FECHA, &PAIS, &FOTO, &CREDITOS)
+		err := rows.Scan(&Data.ID, &Data.Estado, &Data.Nombre, &Data.Apellido, &Data.Correo, &Data.Contrasena, &Data.Fechanacimiento, &Data.Pais, &Data.Foto, &Data.Creditos)
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		Data.idUsuario = ID
 
 		datos = append(datos, Data)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(datos)
-	fmt.Printf("%#v\n", datos)
 	pol.cerrar()
 }
 
@@ -159,6 +165,7 @@ func main() {
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/data", getdatos).Methods("GET")
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
+	router.HandleFunc("/categorias", getCategorias).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":3000", router))

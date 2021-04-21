@@ -60,7 +60,6 @@ type dato struct {
 }
 
 //Persistence
-var datos = alldatos{}
 
 type alldatos []dato
 
@@ -68,13 +67,13 @@ type categoria struct {
 	ID        int    `json:"ID"`
 	CATEGORIA string `json:"CATEGORIA"`
 }
-
-var categorias = allcategorias{}
-
 type allcategorias []categoria
 
 func getCategorias(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
 	w.Header().Set("Content-Type", "application/json")
+
+	var categorias = allcategorias{}
+
 	var Cat categoria
 	pol := newCn()
 	pol.abrir()
@@ -104,9 +103,11 @@ func getTasks(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar
 }
 
 func getdatos(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Access-Control-Allow-Headers:", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
 	var Data dato
-
+	var datos = alldatos{}
 	pol := newCn()
 	pol.abrir()
 	rows, err := pol.db.Query("select * from usuario")
@@ -127,11 +128,13 @@ func getdatos(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(datos)
+	fmt.Printf("entro")
 	pol.cerrar()
 }
 
 func getDataPrueba(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
 	w.Header().Set("Content-Type", "application/json")
+	var datos = alldatos{}
 	json.NewEncoder(w).Encode(datos)
 }
 

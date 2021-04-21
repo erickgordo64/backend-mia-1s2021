@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type cn struct {
@@ -103,9 +104,9 @@ func getTasks(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar
 }
 
 func getdatos(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Headers:", "*")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	//w.Header().Set("Access-Control-Allow-Headers:", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Methods", "*")
 	var Data dato
 	var datos = alldatos{}
 	pol := newCn()
@@ -162,6 +163,12 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 func main() {
 	fmt.Println("helloworld")
 
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders: []string{"*"},
+	})
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/", indexRoute)
@@ -171,5 +178,5 @@ func main() {
 	router.HandleFunc("/categorias", getCategorias).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(":4000", router))
+	log.Fatal(http.ListenAndServe(":4000", c.Handler(router)))
 }

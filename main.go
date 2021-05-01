@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
+	_ "github.com/mitchellh/mapstructure"
 	"github.com/rs/cors"
 )
 
@@ -60,28 +61,25 @@ var tasks = allTasks{
 		ID:      4,
 		Name:    "Task four",
 		Content: "Some Content",
-	},{
+	}, {
 		ID:      5,
 		Name:    "Task five",
 		Content: "Some Content",
 	},
-
 }
 
 type allTasks []task
 
 type usser struct {
-	ID      int    `json:"ID"`
-	Username    string `json:"Username"`
+	ID       int    `json:"ID"`
+	Username string `json:"Username"`
 	Password string `json:"Password"`
 }
 
 // Persistence
-var ussers = allussers{
-}
+var ussers = allussers{}
 
 type allussers []usser
-
 
 type dato struct {
 	ID              int     `json:"ID"`
@@ -106,7 +104,7 @@ type categoria struct {
 }
 type allcategorias []categoria
 
-func login(w http.ResponseWriter, r *http.Request){
+func login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var User usser
@@ -118,7 +116,7 @@ func login(w http.ResponseWriter, r *http.Request){
 
 	pol := newCn()
 	pol.abrir()
-	rows, err := pol.db.Query("select idusuario, username, password from usuario where username=:1 and password=:2",User.Username,User.Password)
+	rows, err := pol.db.Query("select idusuario, username, password from usuario where username=:1 and password=:2", User.Username, User.Password)
 
 	if err != nil {
 		fmt.Println("Error running query")
@@ -128,7 +126,7 @@ func login(w http.ResponseWriter, r *http.Request){
 	defer rows.Close()
 
 	for rows.Next() {
-		err := rows.Scan(&User.ID, &User.Username,&User.Password)
+		err := rows.Scan(&User.ID, &User.Username, &User.Password)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -225,14 +223,14 @@ func createTask(w http.ResponseWriter, r *http.Request) { // esto sirve para cre
 
 }
 
-func uploader(w http.ResponseWriter, r *http.Request){
+func uploader(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(2000)
 
-	if err !=nil{
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	file , fileinfo, err := r.FormFile("archivo")
+	file, fileinfo, err := r.FormFile("archivo")
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -240,21 +238,21 @@ func uploader(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	f, err:= os.OpenFile("./file/"+fileinfo.Filename, os.O_WRONLY|os.O_CREATE,0666)
+	f, err := os.OpenFile("./file/"+fileinfo.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Fatal(err)
 		return
-		}
+	}
 	defer f.Close()
 
-	io.Copy(f,file)
+	io.Copy(f, file)
 
 	fmt.Fprintf(w, fileinfo.Filename)
 
 	w.WriteHeader(200)
-	
+
 }
 
 func indexRoute(w http.ResponseWriter, r *http.Request) {
@@ -278,7 +276,7 @@ func main() {
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
 	router.HandleFunc("/categorias", getCategorias).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
-	router.HandleFunc("/archivo",uploader).Methods("POST")
+	router.HandleFunc("/archivo", uploader).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":4000", c.Handler(router)))

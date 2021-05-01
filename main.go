@@ -1,12 +1,15 @@
 package main
 
+import "C"
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
@@ -22,7 +25,7 @@ func newCn() *cn {
 }
 
 func (db *cn) abrir() {
-	db.db, _ = sql.Open("godror", "HR/1234@localhost:1521/xe")
+	db.db, _ = sql.Open("godror", "mia/1234@localhost:1521/xe")
 
 }
 
@@ -43,9 +46,42 @@ var tasks = allTasks{
 		Name:    "Task One",
 		Content: "Some Content",
 	},
+	{
+		ID:      2,
+		Name:    "Task two",
+		Content: "Some Content",
+	},
+	{
+		ID:      3,
+		Name:    "Task three",
+		Content: "Some Content",
+	},
+	{
+		ID:      4,
+		Name:    "Task four",
+		Content: "Some Content",
+	},{
+		ID:      5,
+		Name:    "Task five",
+		Content: "Some Content",
+	},
+
 }
 
 type allTasks []task
+
+type usser struct {
+	ID      int    `json:"ID"`
+	Username    string `json:"Username"`
+	Password string `json:"Password"`
+}
+
+// Persistence
+var ussers = allussers{
+}
+
+type allussers []usser
+
 
 type dato struct {
 	ID              int     `json:"ID"`
@@ -69,6 +105,39 @@ type categoria struct {
 	CATEGORIA string `json:"CATEGORIA"`
 }
 type allcategorias []categoria
+
+func login(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+
+	var User usser
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Insert a Valid Task Data")
+	}
+	json.Unmarshal(reqBody, &User)
+
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select idusuario, username, password from usuario where username=:1 and password=:2",User.Username,User.Password)
+
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&User.ID, &User.Username,&User.Password)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	json.NewEncoder(w).Encode(User)
+	pol.cerrar()
+
+}
 
 func getCategorias(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
 	w.Header().Set("Content-Type", "application/json")
@@ -156,6 +225,38 @@ func createTask(w http.ResponseWriter, r *http.Request) { // esto sirve para cre
 
 }
 
+func uploader(w http.ResponseWriter, r *http.Request){
+	err := r.ParseMultipartForm(2000)
+
+	if err !=nil{
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	file , fileinfo, err := r.FormFile("archivo")
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Fatal(err)
+		return
+	}
+
+	f, err:= os.OpenFile("./file/"+fileinfo.Filename, os.O_WRONLY|os.O_CREATE,0666)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Fatal(err)
+		return
+		}
+	defer f.Close()
+
+	io.Copy(f,file)
+
+	fmt.Fprintf(w, fileinfo.Filename)
+
+	w.WriteHeader(200)
+	
+}
+
 func indexRoute(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "bienvenido a mi api")
 }
@@ -177,6 +278,8 @@ func main() {
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
 	router.HandleFunc("/categorias", getCategorias).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
+	router.HandleFunc("/archivo",uploader).Methods("POST")
+	router.HandleFunc("/login", login).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":4000", c.Handler(router)))
 }

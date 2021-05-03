@@ -5,6 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/go-yaml/yaml"
 	_ "github.com/go-yaml/yaml"
 	_ "github.com/godror/godror"
@@ -14,11 +20,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	_ "github.com/mitchellh/mapstructure"
 	"github.com/rs/cors"
-	"io"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
 )
 
 // La primera variable es un mapa donde la clave es en realidad un puntero a un WebSocket, el valor es un booleano.
@@ -34,9 +35,9 @@ var upgrader = websocket.Upgrader{
 
 // Definiremos un objeto para guardar nuestros mensajes, para interactuar con el servicio ***Gravatar*** que nos proporcionará un avatar único.
 type Message struct {
-	Email    string`json:"email"`
-	Username string`json:"username"`
-	Message  string`json:"message"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Message  string `json:"message"`
 }
 
 type cn struct {
@@ -56,41 +57,41 @@ func (db *cn) cerrar() {
 	defer db.db.Close()
 }
 
-type resultado struct{
+type resultado struct {
 	Visitante int `mapstructure: visitante yaml: visitante`
-	Local int `mapstructure: local yaml: local`
+	Local     int `mapstructure: local yaml: local`
 }
 
-type prediccion struct{
+type prediccion struct {
 	Visitante int `mapstructure: visitante yaml: visitante`
-	Local int `mapstructure: local yaml: local`
+	Local     int `mapstructure: local yaml: local`
 }
 
-type predicciones struct{
-	Deporte string `mapstructure: deporte yaml: deporte`
-	Fecha string `mapstructure: fecha yaml: fecha`
-	Visitante string `mapstructure: visitante yaml: visitante`
-	Local string `mapstructure: local yaml: local`
-	Prediccion  prediccion`mapstructure: prediccion yaml: prediccion`
-	Resultado  resultado`mapstructure: resultado yaml: resultado`
+type predicciones struct {
+	Deporte    string     `mapstructure: deporte yaml: deporte`
+	Fecha      string     `mapstructure: fecha yaml: fecha`
+	Visitante  string     `mapstructure: visitante yaml: visitante`
+	Local      string     `mapstructure: local yaml: local`
+	Prediccion prediccion `mapstructure: prediccion yaml: prediccion`
+	Resultado  resultado  `mapstructure: resultado yaml: resultado`
 }
 
-type jornadas struct{
-	Jornada string `mapstructure: jornada yaml: jornada`
-	Predicciones []predicciones `mapstructure: predicciones yaml: predicciones` 
+type jornadas struct {
+	Jornada      string         `mapstructure: jornada yaml: jornada`
+	Predicciones []predicciones `mapstructure: predicciones yaml: predicciones`
 }
 
-type resultados struct{
-	Temporada string `mapstructure: temporada yaml: temporada`
-	Tier string `mapstructure: tier yaml: tier`
-	Jornadas []jornadas `mapstructure: jornadas yaml: jornadas`
+type resultados struct {
+	Temporada string     `mapstructure: temporada yaml: temporada`
+	Tier      string     `mapstructure: tier yaml: tier`
+	Jornadas  []jornadas `mapstructure: jornadas yaml: jornadas`
 }
 
 type Archivo struct {
-	Nombre string `mapstructure: nombre yaml: nombre`
-	Apellido string `mapstructure: apellido yaml: apellido`
-	Password string `mapstructure: password yaml: password`
-	Username string `mapstructure: username yaml: username`
+	Nombre     string       `mapstructure: nombre yaml: nombre`
+	Apellido   string       `mapstructure: apellido yaml: apellido`
+	Password   string       `mapstructure: password yaml: password`
+	Username   string       `mapstructure: username yaml: username`
 	Resultados []resultados `mapstructure:  resultados yaml: resultados`
 }
 
@@ -292,7 +293,7 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	file, fileinfo, err := r.FormFile("archivo")
+	file, fileinfo, err := r.FormFile("archivo") //recibo el archivo de un form con su clave o parametro key es archivo
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -300,7 +301,7 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, err := os.OpenFile("./file/"+fileinfo.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("./file/"+fileinfo.Filename, os.O_WRONLY|os.O_CREATE, 0666) //obtngo el archivo
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -309,20 +310,20 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
-	io.Copy(f, file)
+	io.Copy(f, file) //copio el archivo en file a f
 
 	//fmt.Fprintf(w, fileinfo.Filename)
 
-	raw, err := ioutil.ReadFile("./file/"+fileinfo.Filename)
+	raw, err := ioutil.ReadFile("./file/" + fileinfo.Filename) //leo el archivo
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
 	var dat map[string]interface{}
 
-	if err:=yaml.Unmarshal(raw,&dat); err!=nil{
+	if err := yaml.Unmarshal(raw, &dat); err != nil { //reconozco el archivo con el yaml.unmarshal
 		panic(err)
 	}
 
@@ -335,14 +336,15 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 
 	contador := 0
 
-	for key := range dat{
+	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
 		fmt.Println(key)
 		mapstructure.Decode(dat[key], &arch)
 
 		_, err = pol.db.Exec(sqlStatement, contador, key, arch.Username, arch.Password, arch.Nombre, arch.Apellido, arch.Username)
-		if err!=nil{
+		if err != nil {
 			fmt.Println(err)
 		}
+		// con estos for lleno las tablas
 
 		/*for i:=0; i<len(arch.Resultados); i++{
 			fmt.Println("	"+arch.Resultados[i].Temporada)
@@ -445,9 +447,9 @@ func handleMessages() {
 	}
 }
 
-func Archiv(w http.ResponseWriter, r *http.Request){
+func Archiv(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
-	http.ServeFile(w,r,"./public/p.png")
+	http.ServeFile(w, r, "./public/p.png")
 }
 
 func main() {
@@ -472,7 +474,7 @@ func main() {
 	router.HandleFunc("/archivo", uploader).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/ws", handleConnection).Methods("POST")
-	router.Handle("/public/", http.StripPrefix("/",http.FileServer(http.Dir("./public"))))
+	router.Handle("/public/", http.StripPrefix("/", http.FileServer(http.Dir("./public"))))
 	router.HandleFunc("/down", Archiv)
 
 	log.Fatal(http.ListenAndServe(":4000", c.Handler(router)))

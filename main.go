@@ -57,6 +57,8 @@ func (db *cn) cerrar() {
 	defer db.db.Close()
 }
 
+//estructuras para el mapeo del archivo
+
 type resultado struct {
 	Visitante int `mapstructure: visitante yaml: visitante`
 	Local     int `mapstructure: local yaml: local`
@@ -94,6 +96,8 @@ type Archivo struct {
 	Username   string       `mapstructure: username yaml: username`
 	Resultados []resultados `mapstructure:  resultados yaml: resultados`
 }
+
+//----------------------aqui terminan las estruturas del mapeo
 
 type task struct {
 	ID      int    `json:"ID"`
@@ -330,7 +334,7 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	var arch *Archivo
 	//var result *resultados
 
-	sqlStatement := `INSERT INTO usuario(IDUSUARIO,CODIGO_USUARIO, USERNAME,PASSWORD,NOMBRE,APELLIDO,CORREO) values (:1, :2,:3,:4,:5,:6,:7)`
+	//sqlStatement := `INSERT INTO usuario(IDUSUARIO,CODIGO_USUARIO, USERNAME,PASSWORD,NOMBRE,APELLIDO,CORREO) values (:1, :2,:3,:4,:5,:6,:7)`
 	pol := newCn()
 	pol.abrir()
 
@@ -339,25 +343,39 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
 		fmt.Println(key)
 		mapstructure.Decode(dat[key], &arch)
-
-		_, err = pol.db.Exec(sqlStatement, contador, key, arch.Username, arch.Password, arch.Nombre, arch.Apellido, arch.Username)
-		if err != nil {
-			fmt.Println(err)
-		}
+		/*
+			_, err = pol.db.Exec(sqlStatement, contador, key, arch.Username, arch.Password, arch.Nombre, arch.Apellido, arch.Username)
+			if err != nil {
+				fmt.Println(err)
+			}*/
 		// con estos for lleno las tablas
 
-		/*for i:=0; i<len(arch.Resultados); i++{
-			fmt.Println("	"+arch.Resultados[i].Temporada)
+		for i := 0; i < len(arch.Resultados); i++ {
+			fmt.Print("	" + arch.Resultados[i].Temporada)
 
-			for j:=0; j<len(arch.Resultados[i].Jornadas); j++{
-				fmt.Println("		"+arch.Resultados[i].Jornadas[j].Jornada)
-
-			}
-		}*/
+		}
 
 		contador++
 	}
 	pol.cerrar()
+
+	fmt.Println("aqui empieza otro for ---------------------------------------------")
+
+	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
+		// con estos for lleno las tablas
+
+		for i := 0; i < len(arch.Resultados); i++ {
+			fmt.Print(key + "	" + arch.Resultados[i].Temporada)
+
+			for j := 0; j < len(arch.Resultados[i].Jornadas); j++ {
+				fmt.Print("		" + arch.Resultados[i].Jornadas[j].Jornada)
+
+			}
+			fmt.Println("")
+		}
+
+		contador++
+	}
 
 	fmt.Println(arch.Nombre)
 

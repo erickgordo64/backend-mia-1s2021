@@ -6,20 +6,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-yaml/yaml"
+	_ "github.com/go-yaml/yaml"
+	_ "github.com/godror/godror"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	_ "github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
+	_ "github.com/mitchellh/mapstructure"
+	"github.com/rs/cors"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-
-	_ "github.com/go-yaml/yaml"
-	_ "github.com/godror/godror"
-	"github.com/gorilla/mux"
-	_ "github.com/gorilla/websocket"
-	_ "github.com/mitchellh/mapstructure"
-	"github.com/rs/cors"
 )
 
 // La primera variable es un mapa donde la clave es en realidad un puntero a un WebSocket, el valor es un booleano.
@@ -446,6 +445,11 @@ func handleMessages() {
 	}
 }
 
+func Archiv(w http.ResponseWriter, r *http.Request){
+	fmt.Println(r.URL.Path)
+	http.ServeFile(w,r,"./public/p.png")
+}
+
 func main() {
 	fmt.Println("helloworld")
 
@@ -459,7 +463,7 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/", indexRoute)
+	router.HandleFunc("/", indexRoute).Methods("GET")
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/data", getdatos).Methods("GET")
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
@@ -468,6 +472,8 @@ func main() {
 	router.HandleFunc("/archivo", uploader).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/ws", handleConnection).Methods("POST")
+	router.Handle("/public/", http.StripPrefix("/",http.FileServer(http.Dir("./public"))))
+	router.HandleFunc("/down", Archiv)
 
 	log.Fatal(http.ListenAndServe(":4000", c.Handler(router)))
 }

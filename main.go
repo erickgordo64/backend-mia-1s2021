@@ -334,7 +334,7 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	var arch *Archivo
 	//var result *resultados
 
-	//sqlStatement := `INSERT INTO usuario(IDUSUARIO,CODIGO_USUARIO, USERNAME,PASSWORD,NOMBRE,APELLIDO,CORREO) values (:1, :2,:3,:4,:5,:6,:7)`
+	sqlStatement := `INSERT INTO masiva(CODIGO_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE,PASSWORD,USERNAME, TEMPORADA, TIER, JORNADA, DEPORTE, FECHA, VISITANTE_NOMBRE, LOCAL_NOMBRE, VISITANTE_PREDICCION, LOCAL_PREDICCION, VISITANTE_RESULTADO, LOCAL_RESULTADO) values (:1, :2,:3,:4,:5,:6,:7, :8, :9, TO_DATE(:10,'DD/MM/YYYY HH24:MI'), :11, :12, :13, :14, :15, :16)`
 	pol := newCn()
 	pol.abrir()
 
@@ -351,34 +351,20 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 		// con estos for lleno las tablas
 
 		for i := 0; i < len(arch.Resultados); i++ {
-			fmt.Print("	" + arch.Resultados[i].Temporada)
-
+			for j := 0; j < len(arch.Resultados[i].Jornadas); j++ {
+				for k:= 0; k<len(arch.Resultados[i].Jornadas[j].Predicciones); k++{
+					//fmt.Println(key+"-"+arch.Nombre+"-"+arch.Apellido+"-"+arch.Username+"-"+arch.Password+"-"+arch.Resultados[i].Temporada+"-"+arch.Resultados[i].Tier+"-"+arch.Resultados[i].Jornadas[j].Jornada+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Local+"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante,"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local,"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante,"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
+					_, err = pol.db.Exec(sqlStatement, key,arch.Nombre,arch.Apellido,arch.Password,arch.Username,arch.Resultados[i].Temporada,arch.Resultados[i].Tier,arch.Resultados[i].Jornadas[j].Jornada,arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte,arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha,arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante,arch.Resultados[i].Jornadas[j].Predicciones[k].Local,arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante,arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local,arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante,arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
 		}
-
 		contador++
 	}
 	pol.cerrar()
-
-	fmt.Println("aqui empieza otro for ---------------------------------------------")
-
-	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
-		// con estos for lleno las tablas
-
-		for i := 0; i < len(arch.Resultados); i++ {
-			fmt.Print(key + "	" + arch.Resultados[i].Temporada)
-
-			for j := 0; j < len(arch.Resultados[i].Jornadas); j++ {
-				fmt.Print("		" + arch.Resultados[i].Jornadas[j].Jornada)
-
-			}
-			fmt.Println("")
-		}
-
-		contador++
-	}
-
-	fmt.Println(arch.Nombre)
-
+	fmt.Println("aqui termina otro for ---------------------------------------------")
 	json.NewEncoder(w).Encode(arch)
 
 }

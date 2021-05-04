@@ -338,30 +338,21 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	pol := newCn()
 	pol.abrir()
 
-	contador := 0
-
 	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
 		fmt.Println(key)
 		mapstructure.Decode(dat[key], &arch)
-		/*
-			_, err = pol.db.Exec(sqlStatement, contador, key, arch.Username, arch.Password, arch.Nombre, arch.Apellido, arch.Username)
-			if err != nil {
-				fmt.Println(err)
-			}*/
 		// con estos for lleno las tablas
-
 		for i := 0; i < len(arch.Resultados); i++ {
 			for j := 0; j < len(arch.Resultados[i].Jornadas); j++ {
-				for k:= 0; k<len(arch.Resultados[i].Jornadas[j].Predicciones); k++{
-					//fmt.Println(key+"-"+arch.Nombre+"-"+arch.Apellido+"-"+arch.Username+"-"+arch.Password+"-"+arch.Resultados[i].Temporada+"-"+arch.Resultados[i].Tier+"-"+arch.Resultados[i].Jornadas[j].Jornada+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Local+"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante,"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local,"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante,"-",arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
-					_, err = pol.db.Exec(sqlStatement, key,arch.Nombre,arch.Apellido,arch.Password,arch.Username,arch.Resultados[i].Temporada,arch.Resultados[i].Tier,arch.Resultados[i].Jornadas[j].Jornada,arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte,arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha,arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante,arch.Resultados[i].Jornadas[j].Predicciones[k].Local,arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante,arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local,arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante,arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
+				for k := 0; k < len(arch.Resultados[i].Jornadas[j].Predicciones); k++ {
+					//fmt.Println(key+"-"+arch.Nombre+"-"+arch.Apellido+"-"+arch.Username+"-"+arch.Password+"-"+arch.Resultados[i].Temporada+"-"+arch.Resultados[i].Tier+"-"+arch.Resultados[i].Jornadas[j].Jornada+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Local+"-", arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante, "-", arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local, "-", arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante, "-", arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
+					_, err = pol.db.Exec(sqlStatement, key, arch.Nombre, arch.Apellido, arch.Password, arch.Username, arch.Resultados[i].Temporada, arch.Resultados[i].Tier, arch.Resultados[i].Jornadas[j].Jornada, arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte, arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha, arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Local, arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante, arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local, arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante, arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
 					if err != nil {
 						fmt.Println(err)
 					}
 				}
 			}
 		}
-		contador++
 	}
 	pol.cerrar()
 	fmt.Println("aqui termina otro for ---------------------------------------------")

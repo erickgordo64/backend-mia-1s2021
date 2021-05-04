@@ -355,7 +355,6 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	pol.cerrar()
-	fmt.Println("aqui termina otro for ---------------------------------------------")
 	json.NewEncoder(w).Encode(arch)
 
 }

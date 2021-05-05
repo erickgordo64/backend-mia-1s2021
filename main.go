@@ -8,7 +8,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"net/smtp"
 	"os"
 
 	"github.com/go-yaml/yaml"
@@ -16,28 +18,49 @@ import (
 	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	_ "github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
 	_ "github.com/mitchellh/mapstructure"
 	"github.com/rs/cors"
 )
 
 // La primera variable es un mapa donde la clave es en realidad un puntero a un WebSocket, el valor es un booleano.
-// La segunda variable es un canal que actuará como una cola de mensajes enviados por los clientes.
-var clients = make(map[*websocket.Conn]bool) // Connected clients
-var broadcast = make(chan Message)           // Broadcast channel
+// La segunda variable es un canal que actuará como una cola de mensajes enviados por los clientes.         // Broadcast channel
 
 // Este es solo un objeto con métodos para tomar una conexión HTTP normal y actualizarla a un WebSocket
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	//CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-// Definiremos un objeto para guardar nuestros mensajes, para interactuar con el servicio ***Gravatar*** que nos proporcionará un avatar único.
+type Hub struct {
+	clients   map[*websocket.Conn]bool
+	broadcast chan Message
+}
+
+func NewHub() *Hub {
+	return &Hub{
+		clients:   make(map[*websocket.Conn]bool),
+		broadcast: make(chan Message),
+	}
+}
+
+func (h *Hub) run() {
+	for {
+		select {
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				if err := client.WriteJSON(message); err != nil {
+					log.Printf("error occurred: %v", err)
+				}
+			}
+		}
+	}
+}
+
+//Definiremos un objeto para guardar nuestros mensajes, para interactuar con el servicio ***Gravatar*** que nos proporcionará un avatar único.
 type Message struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Message  string `json:"message"`
+	Message string `json:"message"`
 }
 
 type cn struct {
@@ -56,6 +79,16 @@ func (db *cn) abrir() {
 func (db *cn) cerrar() {
 	defer db.db.Close()
 }
+
+//estructura correo
+
+type correo struct {
+	Correo string `json:"correo"`
+}
+
+var RCorreo = CorreoR{}
+
+type CorreoR []correo
 
 //estructuras para el mapeo del archivo
 
@@ -334,19 +367,27 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	var arch *Archivo
 	//var result *resultados
 
-	sqlStatement := `INSERT INTO masiva(CODIGO_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE,PASSWORD,USERNAME, TEMPORADA, TIER, JORNADA, DEPORTE, FECHA, VISITANTE_NOMBRE, LOCAL_NOMBRE, VISITANTE_PREDICCION, LOCAL_PREDICCION, VISITANTE_RESULTADO, LOCAL_RESULTADO) values (:1, :2,:3,:4,:5,:6,:7, :8, :9, TO_DATE(:10,'DD/MM/YYYY HH24:MI'), :11, :12, :13, :14, :15, :16)`
+	sqlStatement := `INSERT INTO masiva(ID, NOMBRE_CLIENTE, APELLIDO_CLIENTE,PASSWORD,USERNAME, TEMPORADA, TIER, JORNADA, DEPORTE, FECHA, VISITANTE_NOMBRE, LOCAL_NOMBRE, VISITANTE_PREDICCION, LOCAL_PREDICCION, VISITANTE_RESULTADO, LOCAL_RESULTADO) values (:1, :2,:3,:4,:5,:6,:7, :8, :9, TO_DATE(:10,'DD/MM/YYYY HH24:MI'), :11, :12, :13, :14, :15, :16)`
 	pol := newCn()
 	pol.abrir()
 
 	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
-		fmt.Println(key)
+		//fmt.Println(key)
 		mapstructure.Decode(dat[key], &arch)
 		// con estos for lleno las tablas
+	}
+
+	for key := range dat {
+		fmt.Println(key)
+
 		for i := 0; i < len(arch.Resultados); i++ {
+			fmt.Println("	" + arch.Resultados[i].Temporada)
 			for j := 0; j < len(arch.Resultados[i].Jornadas); j++ {
+				fmt.Println("		" + arch.Resultados[i].Jornadas[j].Jornada)
 				for k := 0; k < len(arch.Resultados[i].Jornadas[j].Predicciones); k++ {
-					//fmt.Println(key+"-"+arch.Nombre+"-"+arch.Apellido+"-"+arch.Username+"-"+arch.Password+"-"+arch.Resultados[i].Temporada+"-"+arch.Resultados[i].Tier+"-"+arch.Resultados[i].Jornadas[j].Jornada+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Local+"-", arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante, "-", arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local, "-", arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante, "-", arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
-					_, err = pol.db.Exec(sqlStatement, key, arch.Nombre, arch.Apellido, arch.Password, arch.Username, arch.Resultados[i].Temporada, arch.Resultados[i].Tier, arch.Resultados[i].Jornadas[j].Jornada, arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte, arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha, arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Local, arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Visitante, arch.Resultados[0].Jornadas[0].Predicciones[0].Prediccion.Local, arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante, arch.Resultados[0].Jornadas[0].Predicciones[0].Resultado.Visitante)
+					fmt.Println("			" + arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte + "-" + arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha)
+					//fmt.Println("codigo cliente: "+key+"-nombre cliente: "+arch.Nombre+"-apellido cliente: "+arch.Apellido+"- username: "+arch.Username+"-"+arch.Password+"- temporada: "+arch.Resultados[i].Temporada+"- tier: "+arch.Resultados[i].Tier+"- Jornada: "+arch.Resultados[i].Jornadas[j].Jornada+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Local+"-", arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Visitante, "-", arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Local, "-", arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Visitante, "-", arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Visitante)
+					_, err = pol.db.Exec(sqlStatement, key, arch.Nombre, arch.Apellido, arch.Password, arch.Username, arch.Resultados[i].Temporada, arch.Resultados[i].Tier, arch.Resultados[i].Jornadas[j].Jornada, arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte, arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha, arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Local, arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Local, arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Local)
 					if err != nil {
 						fmt.Println(err)
 					}
@@ -354,6 +395,7 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
 	pol.cerrar()
 	json.NewEncoder(w).Encode(arch)
 
@@ -363,87 +405,101 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "bienvenido a mi api")
 }
 
-func handleConnection(w http.ResponseWriter, r *http.Request) {
+var hub = NewHub()
+
+func Socket(w http.ResponseWriter, r *http.Request) {
+	// Start a go routine
+	go hub.run()
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
 	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Para cerrar la conexión una vez termina la función
-	defer ws.Close()
-
-	// Registramos nuestro nuevo cliente al agregarlo al mapa global de "clients" que fue creado anteriormente.
-	clients[ws] = true
-
-	// Bucle infinito que espera continuamente que se escriba  un nuevo mensaje en el WebSocket, lo desserializa de JSON a un objeto Message y luego lo arroja al canal de difusión.
-	for {
-		var msg Message
-
-		// Read in a new message as JSON and map it to a Message object
-		// Si hay un error, registramos ese error y eliminamos ese cliente de nuestro mapa global de clients
-		err := ws.ReadJSON(&msg)
-		if err != nil {
-			log.Printf("error: %v", err)
-			delete(clients, ws)
-			break
-		}
-
-		// Send the newly received message to the broadcast channel
-		broadcast <- msg
-
-		reader(ws)
-	}
-
-	/*log.Println("Client Connected")
-	err = ws.WriteMessage(1, []byte("Hi Client!"))
 	if err != nil {
 		log.Println(err)
 	}
+	defer func() {
+		delete(hub.clients, ws)
+		ws.Close()
+		log.Printf("Closed!")
+	}()
 
-	reader(ws)*/
+	hub.clients[ws] = true
+
+	log.Println("Connected!")
+
+	read(hub, ws)
+	return
+
 }
 
-func reader(conn *websocket.Conn) {
+func read(hub *Hub, client *websocket.Conn) {
 	for {
-		// read in a message
-		messageType, p, err := conn.ReadMessage()
+		var message Message
+		err := client.ReadJSON(&message)
 		if err != nil {
-			log.Println(err)
-			return
+			log.Printf("error occurred: %v", err)
+			delete(hub.clients, client)
+			break
 		}
-		// print out that message for clarity
-		//fmt.Println(string(p))
+		log.Println(message)
 
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
-
-	}
-}
-
-func handleMessages() {
-	for {
-		// Grab the next message from the broadcast channel
-		msg := <-broadcast
-
-		// Send it out to every client that is currently connected
-		for client := range clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				log.Printf("error: %v", err)
-				client.Close()
-				delete(clients, client)
-			}
-		}
+		hub.broadcast <- message
 	}
 }
 
 func Archiv(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
 	http.ServeFile(w, r, "./public/p.png")
+}
+
+func RecCorreo(w http.ResponseWriter, r *http.Request) {
+	var RCorreo = CorreoR{}
+	var Remail correo
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Datos no validos")
+	}
+	json.Unmarshal(reqBody, &Remail)
+	RCorreo = append(RCorreo, Remail)
+	fmt.Println(Remail.Correo)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(Remail)
+
+	const letterBytes = "abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	b := make([]byte, 9)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+
+	var a string = string(b) + "1"
+	fmt.Println("el resultad es", a)
+	/*
+		pol := newCn()
+		pol.abrir()
+		sqlStatement := `UPDATE cliente set pass=:1 where correo_electronico=:2`
+		_, err = pol.db.Exec(sqlStatement, a, Remail.Correo)
+		if err != nil {
+			fmt.Println(err)
+			return
+		} else {
+			fmt.Println("Se actualizo la contrasena del usuario")
+		}
+		pol.cerrar()*/
+
+	auth := smtp.PlainAuth("", "miaproyecto4319@gmail.com", "2006001077", "smtp.gmail.com")
+	to := []string{Remail.Correo} // Array de correos de destino
+
+	msg := []byte("From: QuinielaApp ✉ <miaproyecto4319@gmail.com> \r\n" +
+		"Subject: Cambio de Contrasena\r\n" +
+		"\r\n" +
+		"Esta es su nueva contrasena " + a + " por favor cambiarla en su perfil.\r\n")
+
+	error := smtp.SendMail("smtp.gmail.com:587", auth, "miaproyecto4319@gmail.com", to, msg)
+	if error != nil {
+		fmt.Println("Informamos el error", error)
+	}
+
 }
 
 func main() {
@@ -467,7 +523,8 @@ func main() {
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 	router.HandleFunc("/archivo", uploader).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")
-	router.HandleFunc("/ws", handleConnection).Methods("POST")
+	router.HandleFunc("/ws", Socket).Methods("GET")
+	router.HandleFunc("/reccontra", RecCorreo).Methods("PUT")
 	router.Handle("/public/", http.StripPrefix("/", http.FileServer(http.Dir("./public"))))
 	router.HandleFunc("/down", Archiv)
 

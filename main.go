@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"io"
 	"io/ioutil"
 	"log"
@@ -18,14 +19,9 @@ import (
 	_ "github.com/godror/godror"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/mitchellh/mapstructure"
 	_ "github.com/mitchellh/mapstructure"
 	"github.com/rs/cors"
 )
-
-// La primera variable es un mapa donde la clave es en realidad un puntero a un WebSocket, el valor es un booleano.
-// La segunda variable es un canal que actuará como una cola de mensajes enviados por los clientes.         // Broadcast channel
-
 // Este es solo un objeto con métodos para tomar una conexión HTTP normal y actualizarla a un WebSocket
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -363,41 +359,36 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	if err := yaml.Unmarshal(raw, &dat); err != nil { //reconozco el archivo con el yaml.unmarshal
 		panic(err)
 	}
-
-	var arch *Archivo
 	//var result *resultados
-
 	sqlStatement := `INSERT INTO masiva(ID, NOMBRE_CLIENTE, APELLIDO_CLIENTE,PASSWORD,USERNAME, TEMPORADA, TIER, JORNADA, DEPORTE, FECHA, VISITANTE_NOMBRE, LOCAL_NOMBRE, VISITANTE_PREDICCION, LOCAL_PREDICCION, VISITANTE_RESULTADO, LOCAL_RESULTADO) values (:1, :2,:3,:4,:5,:6,:7, :8, :9, TO_DATE(:10,'DD/MM/YYYY HH24:MI'), :11, :12, :13, :14, :15, :16)`
 	pol := newCn()
 	pol.abrir()
 
 	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
-		//fmt.Println(key)
+		fmt.Println(key)
+		var arch *Archivo
 		mapstructure.Decode(dat[key], &arch)
 		// con estos for lleno las tablas
-	}
-
-	for key := range dat {
-		fmt.Println(key)
-
 		for i := 0; i < len(arch.Resultados); i++ {
-			fmt.Println("	" + arch.Resultados[i].Temporada)
+			//fmt.Println("	" + arch.Resultados[i].Temporada)
 			for j := 0; j < len(arch.Resultados[i].Jornadas); j++ {
-				fmt.Println("		" + arch.Resultados[i].Jornadas[j].Jornada)
+				//fmt.Println("		" + arch.Resultados[i].Jornadas[j].Jornada)
 				for k := 0; k < len(arch.Resultados[i].Jornadas[j].Predicciones); k++ {
-					fmt.Println("			" + arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte + "-" + arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha)
+					//fmt.Println("			" + arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte + "-" + arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha)
 					//fmt.Println("codigo cliente: "+key+"-nombre cliente: "+arch.Nombre+"-apellido cliente: "+arch.Apellido+"- username: "+arch.Username+"-"+arch.Password+"- temporada: "+arch.Resultados[i].Temporada+"- tier: "+arch.Resultados[i].Tier+"- Jornada: "+arch.Resultados[i].Jornadas[j].Jornada+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante+"-"+arch.Resultados[i].Jornadas[j].Predicciones[k].Local+"-", arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Visitante, "-", arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Local, "-", arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Visitante, "-", arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Visitante)
 					_, err = pol.db.Exec(sqlStatement, key, arch.Nombre, arch.Apellido, arch.Password, arch.Username, arch.Resultados[i].Temporada, arch.Resultados[i].Tier, arch.Resultados[i].Jornadas[j].Jornada, arch.Resultados[i].Jornadas[j].Predicciones[k].Deporte, arch.Resultados[i].Jornadas[j].Predicciones[k].Fecha, arch.Resultados[i].Jornadas[j].Predicciones[k].Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Local, arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Prediccion.Local, arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Visitante, arch.Resultados[i].Jornadas[j].Predicciones[k].Resultado.Local)
 					if err != nil {
 						fmt.Println(err)
 					}
+
 				}
 			}
 		}
 	}
 
 	pol.cerrar()
-	json.NewEncoder(w).Encode(arch)
+	w.WriteHeader(http.StatusOK)
+	//json.NewEncoder(w).Encode(arch)
 
 }
 

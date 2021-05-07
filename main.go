@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,6 +12,8 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/go-yaml/yaml"
 	_ "github.com/go-yaml/yaml"
@@ -22,6 +23,7 @@ import (
 	_ "github.com/mitchellh/mapstructure"
 	"github.com/rs/cors"
 )
+
 // Este es solo un objeto con métodos para tomar una conexión HTTP normal y actualizarla a un WebSocket
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -68,7 +70,7 @@ func newCn() *cn {
 }
 
 func (db *cn) abrir() {
-	db.db, _ = sql.Open("godror", "pruebas/1234@localhost:1521/xe")
+	db.db, _ = sql.Open("godror", "mia/1234@localhost:1521/xe")
 
 }
 

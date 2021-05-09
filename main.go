@@ -167,7 +167,23 @@ var tasks = allTasks{
 
 type allTasks []task
 
-type usser struct {
+type usserout struct {
+	ID       int    `json:"ID"`
+	Username string `json:"Username"`
+	Password string `json:"Password"`
+}
+
+type usserin struct {
+	Username string `json:"Username"`
+	Password string `json:"Password"`
+}
+
+type administrain struct {
+	Username string `json:"Username"`
+	Password string `json:"Password"`
+}
+
+type administraout struct {
 	ID       int    `json:"ID"`
 	Username string `json:"Username"`
 	Password string `json:"Password"`
@@ -176,7 +192,7 @@ type usser struct {
 // Persistence
 var ussers = allussers{}
 
-type allussers []usser
+type allussers []usserout
 
 type dato struct {
 	ID              int     `json:"ID"`
@@ -191,6 +207,15 @@ type dato struct {
 	Creditos        float32 `json:"Creditos"`
 }
 
+//eventos
+type evento struct {
+	Title  string `json: "title"`
+	Fecha  string `json: "start"`
+	Fechaf string `json: "end"`
+}
+
+type Alleventos []evento
+
 //Persistence
 
 type alldatos []dato
@@ -203,18 +228,46 @@ type allcategorias []categoria
 
 func login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	var User usser
+	var User usserin
+	var Usero usserout
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Insert a Valid Task Data")
 	}
 	json.Unmarshal(reqBody, &User)
-
 	pol := newCn()
 	pol.abrir()
 	rows, err := pol.db.Query("select idusuario, username, password from usuario where username=:1 and password=:2", User.Username, User.Password)
+	pol.cerrar()
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&Usero.ID, &Usero.Username, &Usero.Password)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(Usero)
+}
 
+func loginA(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var Admin administrain
+	var Admino administraout
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Insert a Valid Task Data")
+	}
+	json.Unmarshal(reqBody, &Admin)
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select idadmin, usuario_admin, contrasena from administrador where usuario_admin=:1 and contrasena=:2", Admin.Username, Admin.Password)
+	pol.cerrar()
 	if err != nil {
 		fmt.Println("Error running query")
 		fmt.Println(err)
@@ -223,15 +276,37 @@ func login(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-		err := rows.Scan(&User.ID, &User.Username, &User.Password)
+		err := rows.Scan(&Admino.ID, &Admino.Username, &Admino.Password)
 		if err != nil {
 			log.Fatalln(err)
+			return
 		}
 	}
+	json.NewEncoder(w).Encode(Admino)
+}
 
-	json.NewEncoder(w).Encode(User)
-	pol.cerrar()
-
+func getEventos(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var eventos = Alleventos{}
+	var Events evento
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select deporte.nombre_deporte, to_char(evento.fecha_inicio_evento,'dd/mm/yy hh24:mi'), to_char(evento.fecha_inicio_evento,'dd/mm/yy hh24:mi') from evento inner join deporte on deporte.iddeporte= evento.deporte_iddeporte")
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&Events.Title, &Events.Fecha, &Events.Fechaf)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		eventos = append(eventos, Events)
+	}
+	json.NewEncoder(w).Encode(eventos)
 }
 
 func getCategorias(w http.ResponseWriter, r *http.Request) { //esto sirve para mostar todos los datos
@@ -511,11 +586,13 @@ func main() {
 	router.HandleFunc("/", indexRoute).Methods("GET")
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/data", getdatos).Methods("GET")
+	router.HandleFunc("/eventos", getEventos).Methods("GET")
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
 	router.HandleFunc("/categorias", getCategorias).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 	router.HandleFunc("/archivo", uploader).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")
+	router.HandleFunc("/loginA", loginA).Methods("POST")
 	router.HandleFunc("/ws", Socket).Methods("GET")
 	router.HandleFunc("/reccontra", RecCorreo).Methods("PUT")
 	router.Handle("/public/", http.StripPrefix("/", http.FileServer(http.Dir("./public"))))

@@ -86,8 +86,8 @@ También tiene un gran apoyo de su comunidad y tienen gran soporte.
     npm install big-calender
 ```
 ### DESARROLLO 
-- Estructura principal proyecto 
-    
+- Estructura principal proyecto\
+    ![myimage-alt-tag](./appstructure.png)
 # API REST GOLANG (BACKEND)
 ### librerias utilizadas golang
 - [github.com/godror/godror](https://github.com/godror/godror)

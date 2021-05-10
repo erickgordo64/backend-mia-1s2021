@@ -13,7 +13,7 @@
     - HTML5 y CSS para que el sitio sea funcional, atractivo y refleja la imagen de cada entidad.
 - Base de datos oracle
 ---------------------------------------------------------------------------
-# REACT
+# REACT (FRONTEND)
 React es una librería Javascript focalizada en el desarrollo de interfaces de usuario. Así se define la propia librería y evidentemente, esa es su principal área de trabajo. Sin embargo, lo cierto es que en React encontramos un excelente aliado para hacer todo tipo de aplicaciones web, SPA (Single Page Application) o incluso aplicaciones para móviles. Para ello, alrededor de React existe un completo ecosistema de módulos, herramientas y componentes capaces de ayudar al desarrollador a cubrir objetivos avanzados con relativamente poco esfuerzo. 
 ![myimage-alt-tag](https://www.programacion.com.py/wp-content/uploads/2016/11/react-logo-1024x576.png)
 ## DESCRIPCION DEL PROBLEMA
@@ -54,7 +54,7 @@ React es una librería Javascript focalizada en el desarrollo de interfaces de u
 
 ```
 ## ESPECIFICACIONES TECNICAS
-- Desarrollo de la solucion\
+### Desarrollo de la solucion\
 La solucion se debe de desarrollar en un ide adecuado para el lenguaje java script y que soporte la utilizacion del paquete de desarrollo de  REACT JS.\
 \
 El IDE escojido para el desarrollo de este proyecto de este proyecto es VISUAL CODE.\
@@ -62,13 +62,11 @@ VScode es un gran IDE ideal trabajo, ya que admite muchos lenguajes de programac
 \
 También tiene un gran apoyo de su comunidad y tienen gran soporte.
 
-- Programas o herramientas requeridas
+### Programas o herramientas requeridas
     - visual code(VScode)
     - comando npm
     - node js
     - react js
-
-
 
 ### librerias utilizadas en react
 - axios
@@ -87,6 +85,10 @@ También tiene un gran apoyo de su comunidad y tienen gran soporte.
 ```
     npm install big-calender
 ```
+### DESARROLLO 
+- Estructura principal proyecto 
+    
+# API REST GOLANG (BACKEND)
 ### librerias utilizadas golang
 - [github.com/godror/godror](https://github.com/godror/godror)
     - libreria que nos permite realizar la conexion entre nuestro api en go con orale 

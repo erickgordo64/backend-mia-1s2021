@@ -70,7 +70,7 @@ func newCn() *cn {
 }
 
 func (db *cn) abrir() {
-	db.db, _ = sql.Open("godror", "mia/1234@localhost:1521/xe")
+	db.db, _ = sql.Open("godror", "prueba3/1234@localhost:1521/xe")
 
 }
 
@@ -525,7 +525,6 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 	sqlStatement := `INSERT INTO masiva(ID, NOMBRE_CLIENTE, APELLIDO_CLIENTE,PASSWORD,USERNAME, TEMPORADA, TIER, JORNADA, DEPORTE, FECHA, VISITANTE_NOMBRE, LOCAL_NOMBRE, VISITANTE_PREDICCION, LOCAL_PREDICCION, VISITANTE_RESULTADO, LOCAL_RESULTADO) values (:1, :2,:3,:4,:5,:6,:7, :8, :9, TO_DATE(:10,'DD/MM/YYYY HH24:MI'), :11, :12, :13, :14, :15, :16)`
 	pol := newCn()
 	pol.abrir()
-
 	for key := range dat { //mapeo el archivo, con el primer for se puede llenar la tabla usuario
 		fmt.Println(key)
 		var arch *Archivo
@@ -547,7 +546,14 @@ func uploader(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	pol.cerrar()
 
+	sqlStatement1 := "begin cargamasiva(); end;"
+	pol.abrir()
+	_, err = pol.db.Exec(sqlStatement1)
+	if err != nil {
+		fmt.Println(err)
+	}
 	pol.cerrar()
 	w.WriteHeader(http.StatusOK)
 	//json.NewEncoder(w).Encode(arch)

@@ -12,7 +12,7 @@
     - HTML5 y CSS para que el sitio sea funcional, atractivo y refleja la imagen de cada entidad.
 - Base de datos oracle
 ### librerias utilizadas en react
-- axio
+- axios
 ```
     npm install axios
 ```
@@ -29,7 +29,7 @@
     npm install big-calender
 ```
 ### librerias utilizadas golang
-- [github.com/godror/godror](github.com/godror/godror)
+- [github.com/godror/godror](https://github.com/godror/godror)
     - libreria que nos permite realizar la conexion entre nuestro api en go con orale 
  ```
     go get -u github.com/godror/godror

@@ -87,7 +87,18 @@ También tiene un gran apoyo de su comunidad y tienen gran soporte.
 ```
 ### DESARROLLO 
 - Estructura principal proyecto\
-    ![myimage-alt-tag](./appstructure.png)
+    La estructura principal del proyecto esta integrado por el App.js e Index.js
+
+    Imagen 1
+    <p>
+    <img src="./appstructure.png" width="250" title="hover text">
+   </p>
+   En el App.js es donde se concentran el manejador de las rutas que estan presentes en nuestro proyecto.
+    
+   Imagen 2
+   <p>
+    <img src="./routes.png" width="350" title="hover text">
+   </p>
 # API REST GOLANG (BACKEND)
 ### librerias utilizadas golang
 - [github.com/godror/godror](https://github.com/godror/godror)

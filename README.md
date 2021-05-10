@@ -29,11 +29,14 @@
     npm install big-calender
 ```
 ### librerias utilizadas golang
-- github.com/godror/godror
+- [github.com/godror/godror](github.com/godror/godror)
     - libreria que nos permite realizar la conexion entre nuestro api en go con orale 
  ```
     go get -u github.com/godror/godror
 ```   
 
 - github.com/gorilla/mux
-Y ESTA LA QUE NOS PERMITE VOLVER NUESTRO CODIGO DE GO EN UN API REST
+    - libreria que no permite volver nuestro app en go en un api rest
+ ```
+    go get -u github.com/gorilla/mux
+```   

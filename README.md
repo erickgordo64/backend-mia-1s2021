@@ -26,6 +26,12 @@ La distribucion de la de los ficheros quedo de la siguiente forma
             -Bronze: Número total de clientes con membresı́a bronze activa en la temporada actual.
             -Silver: Número total de clientes con membresı́a silver activa en la temporada actual.
             -Gold: Número total de clientes con membresı́a gold activa en la temporada actual.
+        \carga masiva
+        \jornadas
+        \temporadas
+        \recompensas
+        \deportes
+        \reportes
     \Cliente
         \Registro cliente
         \login

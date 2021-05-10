@@ -99,6 +99,13 @@ También tiene un gran apoyo de su comunidad y tienen gran soporte.
    <p>
     <img src="./routes.png" width="350" title="hover text">
    </p>
+
+   La aplicacion esta distribuida en componente, dichos componente se ubican en la carpeta componentes del proyecto, para poder hacer uso de cada uno de estos, como se ve en la imagen no.2 estos primero se tienen que importar, haciendo uso **import COMPONENTE from 'ruta ubacacion del componente'**, y dentro de **funcion App()** se debe utlizar Router para poder otorgar una ruta por la cual se podra tener acceso a travez del navegador. en la siguiente imagen se muestra la ubicacion de los componente dentro de la carpeta del proyecto.
+
+   imagen 3
+   <p>
+    <img src="./componentes.png" width="200" title="hover text">
+   </p>
 # API REST GOLANG (BACKEND)
 ### librerias utilizadas golang
 - [github.com/godror/godror](https://github.com/godror/godror)

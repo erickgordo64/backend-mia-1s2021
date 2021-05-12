@@ -71,7 +71,7 @@ func newCn() *cn {
 }
 
 func (db *cn) abrir() {
-	db.db, _ = sql.Open("godror", "prueba3/1234@localhost:1521/xe")
+	db.db, _ = sql.Open("godror", "prueba4/1234@localhost:1521/xe")
 
 }
 
@@ -450,7 +450,7 @@ func getEventos(w http.ResponseWriter, r *http.Request) {
 	var Events evento
 	pol := newCn()
 	pol.abrir()
-	rows, err := pol.db.Query("select deporte.nombre_deporte, to_char(evento.fecha_inicio_evento,'dd/mm/yy hh24:mi'), to_char(evento.fecha_inicio_evento,'dd/mm/yy hh24:mi') from evento inner join deporte on deporte.iddeporte= evento.deporte_iddeporte")
+	rows, err := pol.db.Query("select deporte.nombre_deporte, to_char(evento.fecha_inicio_evento,'mm/dd/yy hh24:mi'), to_char(evento.fecha_inicio_evento,'mm/dd/yy hh24:mi') from evento inner join deporte on deporte.iddeporte= evento.deporte_iddeporte")
 	if err != nil {
 		fmt.Println("Error running query")
 		fmt.Println(err)

@@ -71,7 +71,7 @@ func newCn() *cn {
 }
 
 func (db *cn) abrir() {
-	db.db, _ = sql.Open("godror", "prueba4/1234@localhost:1521/xe")
+	db.db, _ = sql.Open("godror", "prueba5/1234@localhost:1521/xe")
 
 }
 

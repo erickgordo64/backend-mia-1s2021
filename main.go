@@ -746,18 +746,18 @@ func RecCorreo(w http.ResponseWriter, r *http.Request) {
 
 	var a string = string(b) + "1"
 	fmt.Println("el resultad es", a)
-	/*
-		pol := newCn()
-		pol.abrir()
-		sqlStatement := `UPDATE usuario set password=:1 where correo=:2`
-		_, err = pol.db.Exec(sqlStatement, a, Remail.Correo)
-		if err != nil {
-			fmt.Println(err)
-			return
-		} else {
-			fmt.Println("Se actualizo la contrasena del usuario")
-		}
-		pol.cerrar()*/
+
+	pol := newCn()
+	pol.abrir()
+	sqlStatement := `UPDATE usuario set password=:1 where correo=:2`
+	_, err = pol.db.Exec(sqlStatement, a, Remail.Correo)
+	if err != nil {
+		fmt.Println(err)
+		return
+	} else {
+		fmt.Println("Se actualizo la contrasena del usuario")
+	}
+	pol.cerrar()
 
 	auth := smtp.PlainAuth("", "miaproyecto4319@gmail.com", "2006001077", "smtp.gmail.com")
 	to := []string{Remail.Correo} // Array de correos de destino

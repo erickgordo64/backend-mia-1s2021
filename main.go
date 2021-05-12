@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 
 	"github.com/mitchellh/mapstructure"
 
@@ -241,6 +242,100 @@ type usr struct {
 	Apellido        string `json:"apellido"`
 	Fechanacimiento string `json:"date"`
 	Correo          string `json:"correo"`
+}
+
+type ids struct {
+	ID string `json:"id"`
+}
+
+type tempo struct {
+	ID     string `json:"idtemporada"`
+	Nombre string `json: "nombre_temporada"`
+	Fechai string `json:"fecha_inicio"`
+	Fechaf string `json:"fecha_fin"`
+	Estado string `json: "estado_temporada"`
+}
+
+type alltempos []tempo
+
+type jorna struct {
+	ID     string `json:"idtemporada"`
+	Nombre string `json: "nombre_temporada"`
+	Fechai string `json:"fecha_inicio"`
+	Fechaf string `json:"fecha_fin"`
+	Estado string `json: "estado_temporada"`
+}
+
+type alljornas []jorna
+
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/***************************************************************    area para la jornadas    **************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+func getJornadas(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var jornas = alljornas{}
+	var Jornada jorna
+
+	vars := mux.Vars(r)
+	perfilID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		fmt.Println("error", err)
+	}
+	fmt.Println(perfilID)
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select idjornada, nombre_jornada, to_char(fecha_inicio,'dd/mm/yyyy hh24:mi'), to_char(fecha_fin,'dd/mm/yyyy hh24:mi'), estado from jornada where temporada_idtemporada=:1", perfilID)
+	pol.cerrar()
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&Jornada.ID, &Jornada.Nombre, &Jornada.Fechai, &Jornada.Fechaf, &Jornada.Estado)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		jornas = append(jornas, Jornada)
+	}
+	json.NewEncoder(w).Encode(jornas)
+}
+
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/***************************************************************    area para temproada   *****************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+func getTemporada(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var tempos = alltempos{}
+	var Temporada tempo
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select idtemporada, nombre_temporada, to_char(fecha_inicio,'dd/mm/yy hh24:mi'), to_char(fecha_fin,'dd/mm/yy hh24:mi'), estado_temporada from temporada order by fecha_inicio")
+	pol.cerrar()
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&Temporada.ID, &Temporada.Nombre, &Temporada.Fechai, &Temporada.Fechaf, &Temporada.Estado)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		tempos = append(tempos, Temporada)
+	}
+	json.NewEncoder(w).Encode(tempos)
 }
 
 /**********************************************************************************************************************************************************/
@@ -611,6 +706,10 @@ func read(hub *Hub, client *websocket.Conn) {
 	}
 }
 
+func ingresarmensaje() {
+
+}
+
 /**********************************************************************************************************************************************************/
 /**********************************************************************************************************************************************************/
 /**********************************************************************************************************************************************************/
@@ -693,7 +792,9 @@ func main() {
 	router.HandleFunc("/data", getdatos).Methods("GET")
 	router.HandleFunc("/eventos", getEventos).Methods("GET")
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
+	router.HandleFunc("/temporadas", getTemporada).Methods("GET")
 	router.HandleFunc("/categorias", getCategorias).Methods("GET")
+	router.HandleFunc("/jornadas/{id}", getJornadas).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 	router.HandleFunc("/archivo", uploader).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")

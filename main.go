@@ -259,11 +259,11 @@ type tempo struct {
 type alltempos []tempo
 
 type jorna struct {
-	ID     string `json:"idtemporada"`
-	Nombre string `json: "nombre_temporada"`
+	ID     string `json:"idjornada"`
+	Nombre string `json: "nombre_jornada"`
 	Fechai string `json:"fecha_inicio"`
 	Fechaf string `json:"fecha_fin"`
-	Estado string `json: "estado_temporada"`
+	Estado string `json: "estado_jornada"`
 }
 
 type alljornas []jorna

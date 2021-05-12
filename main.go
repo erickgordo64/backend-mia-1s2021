@@ -749,7 +749,7 @@ func RecCorreo(w http.ResponseWriter, r *http.Request) {
 	/*
 		pol := newCn()
 		pol.abrir()
-		sqlStatement := `UPDATE cliente set pass=:1 where correo_electronico=:2`
+		sqlStatement := `UPDATE usuario set password=:1 where correo=:2`
 		_, err = pol.db.Exec(sqlStatement, a, Remail.Correo)
 		if err != nil {
 			fmt.Println(err)

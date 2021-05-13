@@ -277,6 +277,12 @@ type depor struct {
 
 type alldepors []depor
 
+type dep struct {
+	Nombre string `json: "nombre"`
+	Imagen string `json:"imagen"`
+	Color  string `json:"color"`
+}
+
 /**********************************************************************************************************************************************************/
 /**********************************************************************************************************************************************************/
 /**********************************************************************************************************************************************************/
@@ -313,6 +319,30 @@ func getDeportes(w http.ResponseWriter, r *http.Request) {
 		deportess = append(deportess, Deporte)
 	}
 	json.NewEncoder(w).Encode(deportess)
+}
+func agregarDeporte(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var Depor dep
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Insert a Valid Task Data")
+	}
+	json.Unmarshal(reqBody, &Depor)
+	fmt.Println(Depor)
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("insert into deporte(nombre_deporte, imagen, color) values(:1, :2, :3)", Depor.Nombre, Depor.Imagen, Depor.Color)
+	pol.cerrar()
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		fmt.Fprintf(w, "usuario ya existe o correo invalido")
+		return
+	} else {
+		fmt.Fprintf(w, "registro exitos")
+	}
+	defer rows.Close()
+
 }
 
 /**********************************************************************************************************************************************************/
@@ -848,6 +878,7 @@ func main() {
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/loginA", loginA).Methods("POST")
 	router.HandleFunc("/addUser", agregarUsuario).Methods("POST")
+	router.HandleFunc("/addDeporte", agregarDeporte).Methods("POST")
 	router.HandleFunc("/ws", Socket).Methods("GET")
 	router.HandleFunc("/reccontra", RecCorreo).Methods("PUT")
 	router.Handle("/public/", http.StripPrefix("/", http.FileServer(http.Dir("./public"))))

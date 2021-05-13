@@ -268,6 +268,53 @@ type jorna struct {
 
 type alljornas []jorna
 
+type depor struct {
+	ID     string `json:"idjornada"`
+	Nombre string `json: "nombre_deporte"`
+	Imagen string `json:"imagen"`
+	Color  string `json:"color"`
+}
+
+type alldepors []depor
+
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/***************************************************************    area para los deportes   **************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************/
+func getDeportes(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var deportess = alldepors{}
+	var Deporte depor
+
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Insert a Valid Task Data")
+	}
+	json.Unmarshal(reqBody, &Deporte)
+	pol := newCn()
+	pol.abrir()
+	rows, err := pol.db.Query("select iddeporte, nombre_deporte, imagen, color from deporte")
+	pol.cerrar()
+	if err != nil {
+		fmt.Println("Error running query")
+		fmt.Println(err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&Deporte.ID, &Deporte.Nombre, &Deporte.Imagen, &Deporte.Color)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		deportess = append(deportess, Deporte)
+	}
+	json.NewEncoder(w).Encode(deportess)
+}
+
 /**********************************************************************************************************************************************************/
 /**********************************************************************************************************************************************************/
 /**********************************************************************************************************************************************************/
@@ -794,6 +841,7 @@ func main() {
 	router.HandleFunc("/datas", getDataPrueba).Methods("GET")
 	router.HandleFunc("/temporadas", getTemporada).Methods("GET")
 	router.HandleFunc("/categorias", getCategorias).Methods("GET")
+	router.HandleFunc("/deportes", getDeportes).Methods("GET")
 	router.HandleFunc("/jornadas/{id}", getJornadas).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 	router.HandleFunc("/archivo", uploader).Methods("POST")
